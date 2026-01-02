@@ -1,7 +1,7 @@
 function main() {
-  let per90Statistics = ["expected_goals", "expected_assists", "expected_goal_involvements", "goals_scored", "assists", "tackles", "recoveries", "clearances_blocks_interceptions", "bps", "total_points"];
-  let otherStatistics = ["now_cost", "form"];
-  setStatisticTitles(per90Statistics, otherStatistics);
+  let per90Statistics = ["expected_goals", "expected_assists", "expected_goal_involvements", "goals_scored", "assists", "tackles", "recoveries", "clearances_blocks_interceptions", "bps", "total_points"]; // all statistics that will be calculated per 90 minutes
+  let otherStatistics = ["now_cost", "form"]; // all statistics that will be standalone
+  setStatisticTitles(per90Statistics, otherStatistics);  // sets titles for each statistic in spreadsheet
   let url = `https://fantasy.premierleague.com/api/bootstrap-static`;
   const getJson = UrlFetchApp.fetch(url);
   const parse = JSON.parse(getJson.getContentText());
@@ -14,24 +14,24 @@ function main() {
   let currentname = "";
   let currentminutes = 0;
   let currentstatvalue = 0;
-  for (let i = 0; i < 780; i++) {
+  for (let i = 0; i < 780; i++) { // 780 players in premier league. needs updating to work for a dynamic playerbase that changes sizes
     if (parse.elements[i].element_type == 4) {
-      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Forward");
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Forward"); // prepares to add forward stats
       forwardamt +=1;
       currentrow = forwardamt + 1;
     }
     if (parse.elements[i].element_type == 3) {
-      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Midfield");
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Midfield"); // prepares to add midfielder stats
       midfieldamt +=1;
       currentrow = midfieldamt + 1;
     }
     if (parse.elements[i].element_type == 2) {
-      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Defense");
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Defense"); // prepares to add defender stats
       defenseamt += 1;
       currentrow = defenseamt+1;
     }
     if (parse.elements[i].element_type == 1) {
-      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Goalkeeper");
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Goalkeeper"); // prepares to add goalkeeper stats
       goalkeeperamt +=1;
       currentrow = goalkeeperamt+1;
     }
@@ -40,52 +40,51 @@ function main() {
     console.log("printed this name: " + currentname);
     console.log("current row is: " + currentrow);
     console.log("forward amt: " + forwardamt);
-    console.log("midfieldamt: " + midfieldamt);
+    console.log("midfieldamt: " + midfieldamt); // logs amount of each type of player, 
     console.log("defenseamt: " + defenseamt);
     console.log("goalkeeperamt: " + goalkeeperamt);
-    // have an array/list with every data value needed and make a loop here that runs through each for the players
     currentminutes = parse.elements[i].minutes;
     sheet.getRange(currentrow, 2).setValue(currentminutes);
     for (let j = 0; j < per90Statistics.length; j++) {
       currentstatvalue = parse.elements[i][per90Statistics[j]];
-      sheet.getRange(currentrow, 2*j+3).setValue(currentstatvalue);
+      sheet.getRange(currentrow, 2*j+3).setValue(currentstatvalue);  // 2 times length to have each be separated for per90 statistics
       if (currentminutes == 0) {
-        sheet.getRange(currentrow, 2*j+4).setValue(0);
+        sheet.getRange(currentrow, 2*j+4).setValue(0); // handles division by zero
       } else {
-        sheet.getRange(currentrow, 2*j+4).setValue((currentstatvalue/currentminutes*90).toFixed(2));
+        sheet.getRange(currentrow, 2*j+4).setValue((currentstatvalue/currentminutes*90).toFixed(2)); // rounds for per 90 statistics 
       }
       if (per90Statistics[j] === "total_points") {
-        points = currentstatvalue;
+        points = currentstatvalue; // save points value for later calculations
       }
     }
     for (let k = 0; k < otherStatistics.length; k++) {
       currentstatvalue = parse.elements[i][otherStatistics[k]];
       if (otherStatistics[k] === "now_cost") {
-        currentstatvalue /= 10;
-        cost = currentstatvalue;
+        currentstatvalue /= 10; // cost is initially *10 in api
+        cost = currentstatvalue; // saves cost value for later calculations
       } else if (otherStatistics[k] === "form") {
-        form = currentstatvalue;
+        form = currentstatvalue; //saves form value for later calculations
       }
-      sheet.getRange(currentrow, 2*per90Statistics.length+3+k).setValue(currentstatvalue);
+      sheet.getRange(currentrow, 2*per90Statistics.length+3+k).setValue(currentstatvalue); 
     }
-    sheet.getRange(currentrow, 2*per90Statistics.length+3+otherStatistics.length).setValue((form/cost).toFixed(2));
+    sheet.getRange(currentrow, 2*per90Statistics.length+3+otherStatistics.length).setValue((form/cost).toFixed(2));   // later calculations (not dynamic)
     sheet.getRange(currentrow, 2*per90Statistics.length+4+otherStatistics.length).setValue((points/cost).toFixed(2));
   }
 }
 
-function setStatisticTitles(per90Statistics, otherStatistics) {          
-  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Forward");
+function setStatisticTitles(per90Statistics, otherStatistics) {    // could be updated to loop 4 times instead of update for each position individually but not big deal
+  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Forward"); // set for forward sheet
   sheet.getRange(1,2).setValue("minutes");
   for (let i = 0; i < per90Statistics.length; i++) {
-    sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]);
-    sheet.getRange(1, 2*i+4).setValue(per90Statistics[i] + " per 90");
+    sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]); // multiplied by 2 to make room for per 90 stats
+    sheet.getRange(1, 2*i+4).setValue(per90Statistics[i] + " per 90"); // adds per 90. also multiplied by 2 for room. 
   }
   for (let i = 0; i < otherStatistics.length; i++) {
     sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
   }
-  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost");
+  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
   sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
-  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Midfield");
+  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Midfield"); // set for midfield sheet
   sheet.getRange(1,2).setValue("minutes");
   for (let i = 0; i < per90Statistics.length; i++) {
     sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]);
@@ -94,9 +93,9 @@ function setStatisticTitles(per90Statistics, otherStatistics) {
   for (let i = 0; i < otherStatistics.length; i++) {
     sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
   }
-  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost");
+  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
   sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
-  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Defense");
+  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Defense"); // set for defense sheet
   sheet.getRange(1,2).setValue("minutes");
   for (let i = 0; i < per90Statistics.length; i++) {
     sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]);
@@ -105,9 +104,9 @@ function setStatisticTitles(per90Statistics, otherStatistics) {
   for (let i = 0; i < otherStatistics.length; i++) {
     sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
   }
-  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost");
+  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
   sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
-  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Goalkeeper");
+  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Goalkeeper"); // set for goalkeeper sheet
   sheet.getRange(1,2).setValue("minutes");
   for (let i = 0; i < per90Statistics.length; i++) {
     sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]);
@@ -116,7 +115,7 @@ function setStatisticTitles(per90Statistics, otherStatistics) {
   for (let i = 0; i < otherStatistics.length; i++) {
     sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
   }
-  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost");
+  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
   sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
 
 }
