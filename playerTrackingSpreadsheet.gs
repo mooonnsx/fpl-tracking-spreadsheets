@@ -72,51 +72,74 @@ function main() {
   }
 }
 
-function setStatisticTitles(per90Statistics, otherStatistics) {    // could be updated to loop 4 times instead of update for each position individually but not big deal
-  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Forward"); // set for forward sheet
-  sheet.getRange(1,2).setValue("minutes");
-  for (let i = 0; i < per90Statistics.length; i++) {
-    sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]); // multiplied by 2 to make room for per 90 stats
-    sheet.getRange(1, 2*i+4).setValue(per90Statistics[i] + " per 90"); // adds per 90. also multiplied by 2 for room. 
+function setStatisticTitles(per90Statistics, otherStatistics) {  
+  const sheets = ["Forward", "Midfield", "Defense", "Goalkeeper"];
+  var sheet;
+  for (let a = 0; a < 4; a++) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheets[a]); // set for forward sheet
+    sheet.getRange(1,2).setValue("minutes");
+    for (let i = 0; i < per90Statistics.length; i++) {
+      sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]); // multiplied by 2 to make room for per 90 stats
+      sheet.getRange(1, 2*i+4).setValue(per90Statistics[i] + " per 90"); // adds per 90. also multiplied by 2 for room. 
+    }
+    for (let i = 0; i < otherStatistics.length; i++) {
+      sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
+    }
+    sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
+    sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
   }
-  for (let i = 0; i < otherStatistics.length; i++) {
-    sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
-  }
-  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
-  sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
-  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Midfield"); // set for midfield sheet
-  sheet.getRange(1,2).setValue("minutes");
-  for (let i = 0; i < per90Statistics.length; i++) {
-    sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]);
-    sheet.getRange(1, 2*i+4).setValue(per90Statistics[i] + " per 90");
-  }
-  for (let i = 0; i < otherStatistics.length; i++) {
-    sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
-  }
-  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
-  sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
-  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Defense"); // set for defense sheet
-  sheet.getRange(1,2).setValue("minutes");
-  for (let i = 0; i < per90Statistics.length; i++) {
-    sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]);
-    sheet.getRange(1, 2*i+4).setValue(per90Statistics[i] + " per 90");
-  }
-  for (let i = 0; i < otherStatistics.length; i++) {
-    sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
-  }
-  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
-  sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
-  sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Goalkeeper"); // set for goalkeeper sheet
-  sheet.getRange(1,2).setValue("minutes");
-  for (let i = 0; i < per90Statistics.length; i++) {
-    sheet.getRange(1, 2*i+3).setValue(per90Statistics[i]);
-    sheet.getRange(1, 2*i+4).setValue(per90Statistics[i] + " per 90");
-  }
-  for (let i = 0; i < otherStatistics.length; i++) {
-    sheet.getRange(1, 2*per90Statistics.length+3+i).setValue(otherStatistics[i]);
-  }
-  sheet.getRange(1,2*per90Statistics.length+3+otherStatistics.length).setValue("form/cost"); // adds calculated headings that go at the end.
-  sheet.getRange(1,2*per90Statistics.length+4+otherStatistics.length).setValue("points/cost");
+}
 
+
+
+function applyConditionalFormattingAllSheets() {     // CHATGPT CODE - This code is to apply conditional formatting to each row as I deem fit. It is written by ChatGPT because I am not familiar with formatting.
+  const sheetNames = ["Forward", "Midfield", "Defense", "Goalkeeper"];
+
+  const MIN_COLOR = "#e67c73";
+  const MID_COLOR = "#ffd666";
+  const MAX_COLOR = "#57bb8a";
+  const REVERSED_COL = 23; // Column W
+
+  sheetNames.forEach(sheetName => {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!sheet) return;
+
+    const lastCol = sheet.getLastColumn();
+    const lastRow = sheet.getLastRow();
+
+    sheet.clearConditionalFormatRules();
+    let rules = [];
+
+    for (let col = 2; col <= lastCol; col++) {
+      const range = sheet.getRange(2, col, lastRow - 1);
+      const isReversed = col === REVERSED_COL;
+
+      let ruleBuilder = SpreadsheetApp.newConditionalFormatRule()
+        .setRanges([range]);
+
+      // Min
+      ruleBuilder = ruleBuilder.setGradientMinpoint(
+        isReversed ? MAX_COLOR : MIN_COLOR
+      );
+
+      // 50th percentile (median)
+      ruleBuilder = ruleBuilder.setGradientMidpointWithValue(
+        MID_COLOR,
+        SpreadsheetApp.InterpolationType.PERCENTILE,
+        "50"
+      );
+
+      // 98th percentile (instead of max)
+      ruleBuilder = ruleBuilder.setGradientMaxpointWithValue(
+        isReversed ? MIN_COLOR : MAX_COLOR,
+        SpreadsheetApp.InterpolationType.PERCENTILE,
+        "98"
+      );
+
+      rules.push(ruleBuilder.build());
+    }
+
+    sheet.setConditionalFormatRules(rules);
+  });
 }
 
