@@ -25,7 +25,7 @@ both scripts use FPL's API and are made for a google script app that connects to
 
 ## playerTrackingSpreadsheet.gs
 
-### first ~40 columns of midfielder table sorted by points/cost:
+### first ~40 rows of midfielder table when sorted by points/cost:
 <img width="2502" height="1016" alt="image" src="https://github.com/user-attachments/assets/f500210a-548c-4b36-857c-091a4706028e" />
 
 ### scatterplot generated using tables:
