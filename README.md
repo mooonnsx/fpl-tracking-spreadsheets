@@ -1,4 +1,4 @@
-# fpl-tracking-spreadsheet
+# FPL Tracking Spreadsheets - Mini-League and Premier League Players
 **miniLeagueManagerTraker.gs** is a google script app that connects to a spreadsheet and adds the point totals and transfer costs of selected players to said spreadsheet. 
 
 **playerTrackingSpreadsheet.gs** is a google script app that connects to a spreadsheet and adds different statistics of every premier league player separated by position in fpl in different sheets (in one spreadsheet). it provides information that is straight from the api and some that is calculated. 
