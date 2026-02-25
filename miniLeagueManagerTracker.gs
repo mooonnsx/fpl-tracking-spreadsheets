@@ -48,28 +48,37 @@ function getManagersName(teamId) { // returns the first name of a manager with t
   return parse.player_first_name;
 }
 
-function mainPoints() {  // main function
+function mainPoints() { // main function
   const ids = [7329410, 10353719, 7521996, 856227, 11321059]; // jonathan, shubh, amaani, jack, soren in that order (maybe not)
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");
   const currentGW = getCurrentGW();
 
   const sheet2 = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet2");
-
+  var currentPointsValue;
   console.log(`current gw is ${currentGW}`);
   for (let j = 0; j < ids.length; j++) {
     var currentFirstGW = getManagersFirstGW(ids[j]);
-    console.log("this managers first gw is " + getManagersFirstGW(ids[j])); // logs first gameweek
+    console.log("this managers first gw is " + currentFirstGW); // logs first gameweek
     sheet.getRange(1,j+2).setValue(getManagersName(ids[j]));
     sheet2.getRange(9, j+2).setValue(currentFirstGW-1);
-    for (let i = currentFirstGW; i <= currentGW + 1; i++) {      // loops from first gameweek to current gw
-      console.log("point value is" + getPoints(i,ids[j]));
-      sheet.getRange(i+1, j+2).setValue(getPoints(i,ids[j]));
+    for (let i = currentFirstGW; i <= currentGW + 1; i++) { // loops from first gameweek to current gw
+      if (sheet.getRange(i+1, j+2).isBlank()) {  // checks if cell is blank. if not, assume it is cached. otherwise, get value
+        currentPointsValue = getPoints(i,ids[j]);
+        console.log("point value is " + currentPointsValue);
+        sheet.getRange(i+1, j+2).setValue(currentPointsValue);
+      } else {
+        console.log(`point value for GW ${i} is already cached`);
+      }
     }
   }
   for (let k = 1; k <= currentGW +1; k++) {
-    let avg = getAverage(k);
-    sheet.getRange(1+k,2 + ids.length).setValue(avg);
-    console.log(`average for gw ${k} is ${avg}`);
+    if (sheet.getRange(1+k,2+ids.length).isBlank()) {  // checks if cell is blank. if not, assume it is cached. otherwise, get value
+      let avg = getAverage(k);
+      sheet.getRange(1+k,2 + ids.length).setValue(avg);
+      console.log(`average for gw ${k} is ${avg}`);
+    } else {
+      console.log(`average for gw ${k} is already cached`);
+    }
   }
   
 }
@@ -79,14 +88,20 @@ function mainTransferCost() {  // adds the transfer cost for each player to spre
   const ids = [7329410, 10353719, 7521996, 856227, 11321059];
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");
   const currentGW = getCurrentGW();
+  var currentTC;
   console.log(`current gw is ${currentGW}`);
   for (let j = 0; j < ids.length; j++) {
     var currentFirstGW = getManagersFirstGW(ids[j]);
-    console.log("this managers first gw is " + getManagersFirstGW(ids[j]));
+    console.log("this managers first gw is " + currentFirstGW);
     sheet.getRange(1,j+10).setValue(getManagersName(ids[j]));
-    for (let i = currentFirstGW; i <= currentGW + 1; i++) {     
-      console.log("tc value is" + getTransferCost(i,ids[j]));
-      sheet.getRange(i+1, j+10).setValue(getTransferCost(i,ids[j]));  // adds transfer cost to spreadsheet 
+    for (let i = currentFirstGW; i <= currentGW + 1; i++) { 
+      if (sheet.getRange(i+1,j+10).isBlank()) {  // checks if cell is blank. if not, assume it is cached. otherwise, get value
+        currentTC = getTransferCost(i,ids[j]);
+        console.log("tc value is " + currentTC);
+        sheet.getRange(i+1, j+10).setValue(getTransferCost(i,ids[j]));  // adds transfer cost to spreadsheet 
+      } else {
+        console.log(`tc value for gw ${i} is already cached`)
+      }
     }
   }
 }
@@ -104,7 +119,3 @@ function getAverage(gw) {  // gets the average score for each gameweek in global
     const parse = JSON.parse(getJson.getContentText());
     return parse.events[gw-1].average_entry_score;
 }
-
-
-
-
