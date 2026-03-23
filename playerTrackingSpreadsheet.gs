@@ -14,7 +14,8 @@ function main() {
   let currentname = "";
   let currentminutes = 0;
   let currentstatvalue = 0;
-  for (let i = 0; i < 780; i++) { // 780 players in premier league. needs updating to work for a dynamic playerbase that changes sizes
+  let leaguesize = parse.elements.length; // dynamic length
+  for (let i = 0; i < leaguesize; i++) { 
     if (parse.elements[i].element_type == 4) {
       sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Forward"); // prepares to add forward stats
       forwardamt +=1;
@@ -142,4 +143,3 @@ function applyConditionalFormattingAllSheets() {     // CHATGPT CODE - This code
     sheet.setConditionalFormatRules(rules);
   });
 }
-
